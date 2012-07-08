@@ -27,6 +27,10 @@ class GameObject:
             self.x += dx
             self.y += dy
 
+    def set_location(self, (x, y)):
+        self.x = x
+        self.y = y
+
     def position(self):
         return (self.x, self.y)
 
@@ -46,6 +50,31 @@ class Tile:
         self.set_block_move()
         self.set_block_sight()
 
+    def set_floor(self):
+        self.set_block_move(False)
+        self.set_block_sight(False)
+
+
+class Rectangle:
+    def __init__(self, x, y, w, h):
+        self.x1 = x
+        self.y1 = y
+        self.x2 = x + w
+        self.y2 = y + h
+
+    def center(self):
+        center_x = (self.x1 + self.x2) / 2
+        center_y = (self.y1 + self.y2) / 2
+        return (center_x, center_y)
+
+    def intersect(self, other):
+        return (self.x1 <= other.x2 and self.x2 >= other.x1 and
+                self.y1 <= other.y2 and self.y2 >= other.y1)
+
+    def __str__(self):
+        return "(%d, %d), (%d, %d)" % (self.x1, self.y1, self.x2, self.y2)
+
+
 class Player(GameObject):
     """docstring for Player"""
 
@@ -57,15 +86,60 @@ class State:
         npc = GameObject(SCREEN_WIDTH / 2 + 5, SCREEN_HEIGHT / 2, '@', libtcod.yellow)
         self.objects = set([self.player, npc])
         self.exit = False
-        self.game_map = self.make_map()
+        self.game_map = []
+        self.make_map()
 
     def make_map(self):
-        game_map = [[Tile(False) for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
-        game_map[30][30].set_wall()
-        game_map[31][30].set_wall()
-        game_map[32][30].set_wall()
-        game_map[33][30].set_wall()
-        return game_map
+        self.game_map = [[Tile(True) for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
+        self.populate_rooms()
+
+    def populate_rooms(self):
+        ROOM_MAX_SIZE = 10
+        ROOM_MIN_SIZE = 6
+        MAX_ROOMS = 30
+        rooms = []
+        for room in range(MAX_ROOMS):
+            w = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+            h = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+            x = libtcod.random_get_int(0, 0, MAP_WIDTH - w - 1)
+            y = libtcod.random_get_int(0, 0, MAP_HEIGHT - h - 1)
+            new_room = Rectangle(x, y, w, h)
+
+            failed = False
+            for other_room in rooms:
+                if new_room.intersect(other_room):
+                    failed = True
+                    break
+
+            if not failed:
+                self.create_room(new_room)
+                room_center = new_room.center()
+                number_of_rooms = len(rooms)
+                if number_of_rooms == 0:
+                    self.player.set_location(room_center)
+                else:
+                    previous_x, previous_y = rooms[number_of_rooms - 1].center()
+                    current_x, current_y = room_center
+                    if libtcod.random_get_int(0, 0, 1) == 0:
+                        self.create_horizontal_tunnel(previous_x, current_x, previous_y)
+                        self.create_vertical_tunnel(previous_y, current_y, current_x)
+                    else:
+                        self.create_horizontal_tunnel(previous_x, current_x, current_y)
+                        self.create_vertical_tunnel(previous_y, current_y, previous_x)
+                rooms.append(new_room)
+
+    def create_room(self, rectangle):
+        for x in range(rectangle.x1 + 1, rectangle.x2):
+            for y in range(rectangle.y1 + 1, rectangle.y2):
+                self.game_map[x][y].set_floor()
+
+    def create_horizontal_tunnel(self, x1, x2, y):
+        for x in range(min(x1, x2), max(x1, x2) + 1):
+            self.game_map[x][y].set_floor()
+
+    def create_vertical_tunnel(self, y1, y2, x):
+        for y in range(min(y1, y2), max(y1, y2) + 1):
+            self.game_map[x][y].set_floor()
 
     def step(self):
         return self.objects
@@ -115,6 +189,8 @@ class Screen:
         if key.vk == libtcod.KEY_ESCAPE:
             self.exit = True
             return
+        if key.vk == libtcod.KEY_ENTER and libtcod.KEY_ALT:
+            libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
 
         player = self.state.player
         game_map = self.state.game_map
@@ -128,7 +204,6 @@ class Screen:
             player.move((1, 0), game_map)
 
 
-state = State()
 screen = Screen()
 
 while not libtcod.console_is_window_closed() and not screen.exit:
