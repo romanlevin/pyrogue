@@ -21,7 +21,7 @@ class Screen:
         self.start_fullscreen = start_fullscreen
         self.font = font
         self.console = libtcod.console_new(screen_width, screen_height)
-        self.state = State(screen_width, screen_height, map_width, map_height)
+        self.state = State(map_width, map_height)
         self.fov_map = self.build_fov_map()
         self.fov_recompute = True
         self.exit = False
@@ -90,21 +90,22 @@ class Screen:
         if key.vk == libtcod.KEY_ESCAPE:
             self.exit = True
             return
-        if key.vk == libtcod.KEY_ENTER and libtcod.KEY_ALT:
+        elif key.vk == libtcod.KEY_ENTER and libtcod.KEY_ALT:
             libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+        elif key.vk == libtcod.KEY_CONTROL and ord('s'):
+            libtcod.sys_save_screenshot()
 
         player = self.state.player
-        game_map = self.state.game_map
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-            self.move_player(player, (0, -1), game_map)
+            self.move_player(player, (0, -1))
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-            self.move_player(player, (0, 1), game_map)
+            self.move_player(player, (0, 1))
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-            self.move_player(player, (-1, 0), game_map)
+            self.move_player(player, (-1, 0))
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-            self.move_player(player, (1, 0), game_map)
+            self.move_player(player, (1, 0))
 
-    def move_player(self, player, direction, game_map):
-        if player.move(direction, game_map):
+    def move_player(self, player, direction):
+        if player.move(direction, self.state):
             self.fov_recompute = True
 

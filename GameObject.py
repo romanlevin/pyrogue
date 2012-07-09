@@ -1,13 +1,15 @@
 class GameObject:
     """docstring for GameObject"""
-    def __init__(self, x, y, character, color):
+    def __init__(self, (x, y), name, character, color, blocks=True):
         self.x = x
         self.y = y
+        self.name = name
         self.character = character
         self.color = color
+        self.blocks = blocks
 
-    def move(self, (dx, dy), game_map):
-        if not game_map[self.x + dx][self.y + dy].block_move:
+    def move(self, (dx, dy), state):
+        if not state.is_blocked((self.x + dx, self.y + dy)):
             self.x += dx
             self.y += dy
             return True

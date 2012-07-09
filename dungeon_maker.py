@@ -1,4 +1,5 @@
 import libtcodpy as libtcod
+from GameObject import GameObject
 
 
 class Tile:
@@ -47,13 +48,13 @@ class Rectangle:
 
 class DungeonMaker:
     @staticmethod
-    def make_map(MAP_WIDTH, MAP_HEIGHT, player):
+    def make_map(MAP_WIDTH, MAP_HEIGHT, player, objects):
         game_map = [[Tile(True) for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
-        DungeonMaker.populate_rooms(game_map, MAP_WIDTH, MAP_HEIGHT, player)
+        DungeonMaker.populate_rooms(game_map, MAP_WIDTH, MAP_HEIGHT, player, objects)
         return game_map
 
     @staticmethod
-    def populate_rooms(game_map, MAP_WIDTH, MAP_HEIGHT, player):
+    def populate_rooms(game_map, MAP_WIDTH, MAP_HEIGHT, player, objects):
         ROOM_MAX_SIZE = 10
         ROOM_MIN_SIZE = 6
         MAX_ROOMS = 30
@@ -86,6 +87,7 @@ class DungeonMaker:
                     else:
                         DungeonMaker.create_horizontal_tunnel(game_map, previous_x, current_x, current_y)
                         DungeonMaker.create_vertical_tunnel(game_map, previous_y, current_y, previous_x)
+                    DungeonMaker.place_objects(game_map, new_room, objects)
                 rooms.append(new_room)
 
     @staticmethod
@@ -103,3 +105,18 @@ class DungeonMaker:
     def create_vertical_tunnel(game_map, y1, y2, x):
         for y in range(min(y1, y2), max(y1, y2) + 1):
             game_map[x][y].set_floor()
+
+    @staticmethod
+    def place_objects(game_map, room, objects):
+        MAX_MONSTERS_IN_ROOM = 3
+        num_monsters = libtcod.random_get_int(0, 0, MAX_MONSTERS_IN_ROOM)
+        for i in range(num_monsters):
+            x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
+            y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
+            die_throw = libtcod.random_get_float(0, 0, 1)
+            if die_throw < 0.8:
+                monster = GameObject((x, y), 'orc', 'o', libtcod.desaturated_green)
+            else:
+                monster = GameObject((x, y), 'troll', 'T', libtcod.darker_green)
+            objects.add(monster)
+
