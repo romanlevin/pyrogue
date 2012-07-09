@@ -1,25 +1,27 @@
 import libtcodpy as libtcod
 from State import State
 
-SCREEN_WIDTH = 80
-SCREEN_HEIGHT = 50
-MAP_WIDTH = 80
-MAP_HEIGHT = 45
-FPS_LIMIT = 20
-START_FULLSCREEN = False
-FONT = 'arial10x10.png'
-
+#colors
 color_dark_wall = libtcod.Color(0, 0, 100)
-color_dark_ground = libtcod.Color(50, 50, 100)
+color_light_wall = libtcod.Color(130, 110, 50)
+color_dark_ground = libtcod.Color(50, 50, 150)
+color_light_ground = libtcod.Color(200, 180, 50)
 
 
 class Screen:
     """docstring for Screen"""
-    def __init__(self):
-        libtcod.console_set_custom_font(FONT, libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
-        libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'pyrogue', START_FULLSCREEN)
-        self.console = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
-        self.state = State()
+    def __init__(self, screen_width, screen_height, map_width, map_height, fps_limit, start_fullscreen, font):
+        libtcod.console_set_custom_font(font, libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+        libtcod.console_init_root(screen_width, screen_height, 'pyrogue', start_fullscreen)
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        # self.map_width = map_width
+        # self.map_height = map_height
+        self.fps_limit = fps_limit
+        self.start_fullscreen = start_fullscreen
+        self.font = font
+        self.console = libtcod.console_new(screen_width, screen_height)
+        self.state = State(screen_width, screen_height, map_width, map_height)
         self.exit = False
 
     def draw_objects(self, objects):
@@ -41,7 +43,7 @@ class Screen:
             libtcod.console_print_left(self.console, obj.x, obj.y, libtcod.BKGND_NONE, ' ')
 
     def blit(self):
-        libtcod.console_blit(self.console, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+        libtcod.console_blit(self.console, 0, 0, self.screen_width, self.screen_height, 0, 0, 0)
         libtcod.console_flush()
 
     def step(self):

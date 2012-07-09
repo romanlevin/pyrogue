@@ -11,11 +11,8 @@ FPS_LIMIT = 20
 START_FULLSCREEN = False
 FONT = 'arial10x10.png'
 
-color_dark_wall = libtcod.Color(0, 0, 100)
-color_dark_ground = libtcod.Color(50, 50, 100)
 
-
-screen = Screen()
+screen = Screen(SCREEN_WIDTH, SCREEN_HEIGHT, MAP_WIDTH, MAP_HEIGHT, FPS_LIMIT, START_FULLSCREEN, FONT)
 
 while not libtcod.console_is_window_closed() and not screen.exit:
     screen.step()
