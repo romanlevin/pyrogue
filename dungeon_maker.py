@@ -5,6 +5,7 @@ class Tile:
     def __init__(self, block_move, block_sight=None):
         self.block_move = block_move
         self.block_sight = block_sight if block_sight else block_move
+        self.explored = False
 
     def set_block_move(self, block_move=True):
         self.block_move = block_move
@@ -19,6 +20,9 @@ class Tile:
     def set_floor(self):
         self.set_block_move(False)
         self.set_block_sight(False)
+
+    def explore(self):
+        self.explored = True
 
 
 class Rectangle:

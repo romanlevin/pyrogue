@@ -22,21 +22,50 @@ class Screen:
         self.font = font
         self.console = libtcod.console_new(screen_width, screen_height)
         self.state = State(screen_width, screen_height, map_width, map_height)
+        self.fov_map = self.build_fov_map()
+        self.fov_recompute = True
         self.exit = False
+        # self.step()
+
+    def build_fov_map(self):
+        game_map = self.state.game_map
+        map_width, map_height = len(game_map), len(game_map[0])
+        fov_map = libtcod.map_new(map_width, map_height)
+        for x in range(map_width):
+            for y in range(map_height):
+                libtcod.map_set_properties(fov_map, x, y, not game_map[x][y].block_sight, not game_map[x][y].block_move)
+        return fov_map
+
+    def compute_fov(self):
+        FOV_ALGO = 0  # default FOV algorithm
+        FOV_LIGHT_WALLS = True
+        TORCH_RADIUS = 10
+        self.fov_recompute = True
+        player = self.state.player
+        libtcod.map_compute_fov(self.fov_map, player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
 
     def draw_objects(self, objects):
         for obj in objects:
-            libtcod.console_set_foreground_color(self.console, obj.color)
-            libtcod.console_print_left(self.console, obj.x, obj.y, obj.color, obj.character)
+            if libtcod.map_is_in_fov(self.fov_map, obj.x, obj.y):
+                libtcod.console_set_foreground_color(self.console, obj.color)
+                libtcod.console_print_left(self.console, obj.x, obj.y, obj.color, obj.character)
 
     def draw_map(self, game_map):
         for x in xrange(len(game_map)):
             for y in range(len(game_map[x])):
+                visible = libtcod.map_is_in_fov(self.fov_map, x, y)
                 wall = game_map[x][y].block_sight
-                if wall:
-                    libtcod.console_set_back(self.console, x, y, color_dark_wall, libtcod.BKGND_SET)
-                else:
-                    libtcod.console_set_back(self.console, x, y, color_dark_ground, libtcod.BKGND_SET)
+                if not visible and game_map[x][y].explored:
+                    if wall:
+                        libtcod.console_set_back(self.console, x, y, color_dark_wall, libtcod.BKGND_SET)
+                    else:
+                        libtcod.console_set_back(self.console, x, y, color_dark_ground, libtcod.BKGND_SET)
+                elif visible:
+                    if wall:
+                        libtcod.console_set_back(self.console, x, y, color_light_wall, libtcod.BKGND_SET)
+                    else:
+                        libtcod.console_set_back(self.console, x, y, color_light_ground, libtcod.BKGND_SET)
+                    game_map[x][y].explore()
 
     def clear_objects(self, objects):
         for obj in objects:
@@ -47,6 +76,8 @@ class Screen:
         libtcod.console_flush()
 
     def step(self):
+        if self.fov_recompute:
+            self.compute_fov()
         objects = self.state.step()
         self.draw_objects(objects)
         self.draw_map(self.state.game_map)
@@ -65,10 +96,15 @@ class Screen:
         player = self.state.player
         game_map = self.state.game_map
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-            player.move((0, -1), game_map)
+            self.move_player(player, (0, -1), game_map)
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-            player.move((0, 1), game_map)
+            self.move_player(player, (0, 1), game_map)
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-            player.move((-1, 0), game_map)
+            self.move_player(player, (-1, 0), game_map)
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-            player.move((1, 0), game_map)
+            self.move_player(player, (1, 0), game_map)
+
+    def move_player(self, player, direction, game_map):
+        if player.move(direction, game_map):
+            self.fov_recompute = True
+

@@ -10,6 +10,9 @@ class GameObject:
         if not game_map[self.x + dx][self.y + dy].block_move:
             self.x += dx
             self.y += dy
+            return True
+        else:
+            return False
 
     def set_location(self, (x, y)):
         self.x = x
