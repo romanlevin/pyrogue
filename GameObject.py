@@ -1,6 +1,3 @@
-import math
-
-
 class GameObject(object):
     """docstring for GameObject"""
     def __init__(self, state, (x, y), name, character, color, blocks=True, fighter=None, ai=None):
@@ -34,15 +31,19 @@ class GameObject(object):
         return (self.x, self.y)
 
     def distance_to(self, other):
-        dx = other.x - self.x
-        dy = other.y - self.y
-        return math.sqrt(dx ** 2 + dy ** 2)
+        return self.state.distance(self, other)
 
-    def move_towards(self, target, state):
+    def distance_to_player(self):
+        return self.state.distance_to_player(self)
+
+    def move_towards(self, target):
         dx = target.x - self.x
         dy = target.y - self.y
         distance = self.distance_to(target)
 
         dx = int(round(dx / distance))
         dy = int(round(dy / distance))
-        self.move((dx, dy), state)
+        self.move((dx, dy), self.state)
+
+    def move_towards_player(self):
+        self.move_towards(self.state.player)

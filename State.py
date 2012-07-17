@@ -1,6 +1,7 @@
 from Player import Player
 from dungeon_maker import DungeonMaker
 import libtcodpy as libtcod
+import math
 
 
 class State(object):
@@ -15,8 +16,10 @@ class State(object):
         self.game_map = self.DungeonMaker.make_map()
         self.fov_map = self.build_fov_map()
 
-    def step(self):
-        pass
+    def take_turn(self):
+        for obj in self.objects:
+            if obj.ai:
+                obj.ai.take_turn()
 
     def is_blocked(self, (x, y)):
         if self.game_map[x][y].block_move:
@@ -54,3 +57,14 @@ class State(object):
             return True
         else:
             return False
+
+    def is_in_fov(self, target):
+        return libtcod.map_is_in_fov(self.fov_map, target.x, target.y)
+
+    def distance(self, object1, object2):
+        dx = object1.x - object2.x
+        dy = object1.y - object2.y
+        return math.sqrt(dx ** 2 + dy ** 2)
+
+    def distance_to_player(self, target):
+        return self.distance(target, self.player)

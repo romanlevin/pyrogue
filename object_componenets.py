@@ -10,7 +10,8 @@ class Fighter(object):
 
 
 class BasicMonster(object):
-    def take_turn(self, state):
+    def take_turn(self):
         monster = self.owner
-        if libtcod.map_is_in_fov():
-            pass
+        if monster.state.is_in_fov(monster):
+            if monster.distance_to_player() >= 2:
+                monster.move_towards_player()

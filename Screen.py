@@ -19,7 +19,6 @@ class Screen(object):
         self.console = libtcod.console_new(screen_width, screen_height)
         self.state = State(map_width, map_height)
         self.fov_recompute = True
-        self.exit = False
         self.mode = 'playing'
 
     def step(self):
@@ -32,9 +31,9 @@ class Screen(object):
         self.clear_objects()
         player_action = self.handle_keys()
         if player_action == 'exit':
-            self.exit = True
-        elif player_action == "didnt-take-turn":
-            pass
+            self.mode = 'exit'
+        elif self.mode == 'playing' and player_action != "didnt-take-turn":
+            self.state.take_turn()
 
     def draw_objects(self):
         fov_map = self.state.fov_map
@@ -79,6 +78,7 @@ class Screen(object):
         elif key.vk == libtcod.KEY_CONTROL and ord('s'):
             libtcod.sys_save_screenshot()
 
+        move = False
         if self.mode == 'playing':
             if libtcod.console_is_key_pressed(libtcod.KEY_UP):
                 self.move_player((0, -1))
