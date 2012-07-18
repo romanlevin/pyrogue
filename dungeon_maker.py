@@ -1,6 +1,5 @@
 import libtcodpy as libtcod
-from GameObject import GameObject
-from object_componenets import Fighter, BasicMonster
+from Monster import Monster
 
 
 class Tile(object):
@@ -122,12 +121,8 @@ class DungeonMaker(object):
             y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
             die_throw = libtcod.random_get_float(0, 0, 1)
             if die_throw < 0.8:
-                figher_component = Fighter(hp=10, defense=0, power=3)
-                ai_component = BasicMonster()
-                monster = GameObject(state, (x, y), 'orc', 'o', libtcod.desaturated_green, fighter=figher_component, ai=ai_component)
+                monster = Monster(state, (x, y), 'orc', 'o', libtcod.desaturated_green, hp=10, defense=0, power=3)
             else:
-                figher_component = Fighter(hp=13, defense=1, power=5)
-                ai_component = BasicMonster()
-                monster = GameObject(state, (x, y), 'troll', 'T', libtcod.darker_green, fighter=figher_component, ai=ai_component)
+                monster = Monster(state, (x, y), 'troll', 'T', libtcod.darker_green, hp=13, defense=1, power=5)
             state.objects.add(monster)
 

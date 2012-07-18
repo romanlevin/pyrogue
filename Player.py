@@ -14,9 +14,13 @@ class Player(GameObject):
         y = self.y + dy
         position = (x, y)
         target = state.find_object(position)
-        if target:
-            print 'The %s laughs at your efforts to attack it!' % target.name
+        if target and target.fighter:
+            self.fighter.attack(target)
             return False
         else:
             return self.move((dx, dy), state)
 
+    def death(self):
+        print 'You died!'
+        self.character = '.'
+        self.color = libtcod.darker_red

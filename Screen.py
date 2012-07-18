@@ -27,6 +27,7 @@ class Screen(object):
             self.fov_recompute = False
         self.draw_objects()
         self.draw_map()
+        self.draw_stats()
         self.blit()
         self.clear_objects()
         player_action = self.handle_keys()
@@ -60,6 +61,12 @@ class Screen(object):
                     else:
                         libtcod.console_set_back(self.console, x, y, color_light_ground, libtcod.BKGND_SET)
                     game_map[x][y].explore()
+
+    def draw_stats(self):
+        fighter = self.state.player.fighter
+        hp_string = 'HP: %d/%d' % (fighter.hp, fighter.max_hp)
+        libtcod.console_set_foreground_color(self.console, libtcod.white)
+        libtcod.console_print_left(self.console, 1, self.screen_height - 2, libtcod.BKGND_NONE, hp_string)
 
     def clear_objects(self):
         for obj in self.state.objects:
